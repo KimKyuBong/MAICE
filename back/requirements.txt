@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+python-dotenv
+openai
+tiktoken
+PyPDF2
+sentence-transformers
+openpyxl
+scikit-learn
+numpy
+passlib[bcrypt]
+python-multipart

@@ -18,7 +18,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def truncate_text(text, max_tokens):
     """텍스트를 최대 토큰 수로 자릅니다."""
-    encoding = tiktoken.encoding_for_model("gpt-4")
+    encoding = tiktoken.encoding_for_model("gpt-4o")
     tokens = encoding.encode(text)
     if len(tokens) <= max_tokens:
         return text
@@ -26,12 +26,11 @@ def truncate_text(text, max_tokens):
 
 def num_tokens_from_string(string: str) -> int:
     """문자열의 토큰 수를 계산합니다."""
-    encoding = tiktoken.encoding_for_model("gpt-4")
+    encoding = tiktoken.encoding_for_model("gpt-4o")
     num_tokens = len(encoding.encode(string))
     return num_tokens
 
 def evaluate_math_communication(student_answer, relevant_info=None):
-    # relevant_info를 사용하지 않으므로 context 부분을 제거합니다
     prompt = f"""
     학생 답변: {student_answer}
 
@@ -42,8 +41,11 @@ def evaluate_math_communication(student_answer, relevant_info=None):
     4. 문제 해결 명확성
     5. 의사소통 능력
 
-    각 항목에 대해 1-5 점수와 구체적인 한국어 피드백을 제공하세요.
-    특히 틀린 부분이 있다면 반드시 지적하고 올바른 내용을 설명해야 합니다.
+    학생이 풀어야 하는 문제를 인지하고, 학생의 답변이 적절한지를 단계적으로 분석하고 평가해야 합니다.
+    각 항목에 대해 1-5 점수를 부여하고, 특히 틀린 부분이 있다면 반드시 지적하고 올바른 내용을 설명해야 합니다.
+    피드백에 반드시 latex문법을 지킨 수식이 있어야 합니다.
+    학생들이 올바른 풀이를 유도할 수 있도록 설명해주세요.
+
 
     다음 JSON 형식으로 정확히 응답하세요:
 
@@ -79,6 +81,8 @@ def evaluate_math_communication(student_answer, relevant_info=None):
         json_content = re.search(r'\{.*\}', response_content, re.DOTALL)
         if json_content:
             json_content = json_content.group()
+            # LaTeX 수식의 백슬래시 이스케이프 처리
+            json_content = json_content.replace('\\', '\\\\')  # 백슬래시 이스케이프
         else:
             raise ValueError("JSON 형식의 응답을 찾을 수 없습니다.")
         

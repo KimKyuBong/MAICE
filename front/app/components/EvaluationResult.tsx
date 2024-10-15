@@ -1,10 +1,7 @@
 import React from 'react';
 import { EvaluationData } from '../types';
-
-interface EvaluationItem {
-  score: number;
-  feedback: string;
-}
+import { BlockMath } from 'react-katex';
+import 'katex/dist/katex.min.css';
 
 interface EvaluationResultProps {
   evaluation: EvaluationData;
@@ -53,7 +50,15 @@ const EvaluationResult: React.FC<EvaluationResultProps> = ({ evaluation }) => {
               </span>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {item.feedback}
+              {item.feedback.split(/(`[^`]+`)/g).map((part, index) => {
+                // 수식 부분을 감지하여 BlockMath로 렌더링
+                if (part.startsWith('`') && part.endsWith('`')) {
+                  const latex = part.slice(1, -1); // 백틱 제거
+                  return <BlockMath key={index}>{latex}</BlockMath>;
+                }
+                // 일반 텍스트는 그대로 렌더링
+                return <span key={index}>{part}</span>;
+              })}
             </p>
           </div>
         );
