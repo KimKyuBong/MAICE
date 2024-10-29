@@ -3,6 +3,7 @@ build/
 *.o
 *.out
 *.exe
+*.png
 
 # 로그 파일
 *.log
@@ -11,6 +12,7 @@ build/
 *.tmp
 *.temp
 
+*.pyc
 # IDE 및 편집기 설정
 .vscode/
 .idea/

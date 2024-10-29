@@ -1,6 +1,12 @@
 export interface EvaluationItem {
   score: number;
   feedback: string;
+  improvement: string;
+  concept_explanation?: string;
+  step_analysis?: string;
+  correct_usage?: string;
+  clear_solution?: string;
+  effective_communication?: string;
 }
 
 export interface EvaluationData {

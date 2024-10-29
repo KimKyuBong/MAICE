@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { EvaluationResponse } from '../types';
 import EvaluationResult from './EvaluationResult';
@@ -27,7 +27,7 @@ export default function ImageEvaluation() {
     const formData = new FormData();
     formData.append('image', image);
 
-    try {
+    try /*  */ {
       const response = await axios.post<EvaluationResponse>(
         'http://localhost:8000/analyze-image',
         formData,
@@ -69,7 +69,7 @@ export default function ImageEvaluation() {
         </button>
       </form>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        {evaluation && <EvaluationResult evaluation={evaluation.evaluation} />}
+        {evaluation && <EvaluationResult evaluation={evaluation} />}
       </Modal>
     </div>
   );
