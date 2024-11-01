@@ -1,0 +1,179 @@
+{
+  "2101": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2101')"
+  },
+  "2102": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2102')"
+  },
+  "2103": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2103')"
+  },
+  "2104": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2104')"
+  },
+  "2105": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2105')"
+  },
+  "2106": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2106')"
+  },
+  "2107": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2107')"
+  },
+  "2108": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2108')"
+  },
+  "2109": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2109')"
+  },
+  "2110": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2110')"
+  },
+  "2111": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2111')"
+  },
+  "2112": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2112')"
+  },
+  "2113": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2113')"
+  },
+  "2114": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2114')"
+  },
+  "2115": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2115')"
+  },
+  "2201": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2201')"
+  },
+  "2202": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2202')"
+  },
+  "2203": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2203')"
+  },
+  "2204": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2204')"
+  },
+  "2205": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2205')"
+  },
+  "2206": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2206')"
+  },
+  "2207": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2207')"
+  },
+  "2208": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2208')"
+  },
+  "2209": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2209')"
+  },
+  "2210": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2210')"
+  },
+  "2211": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2211')"
+  },
+  "2212": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2212')"
+  },
+  "2213": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2213')"
+  },
+  "2214": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2214')"
+  },
+  "2215": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2215')"
+  },
+  "2216": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2216')"
+  },
+  "2301": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2301')"
+  },
+  "2302": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2302')"
+  },
+  "2303": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2303')"
+  },
+  "2304": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2304')"
+  },
+  "2305": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2305')"
+  },
+  "2306": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2306')"
+  },
+  "2307": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2307')"
+  },
+  "2308": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2308')"
+  },
+  "2309": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2309')"
+  },
+  "2310": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2310')"
+  },
+  "2311": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2311')"
+  },
+  "2312": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2312')"
+  },
+  "2313": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2313')"
+  },
+  "2314": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2314')"
+  },
+  "2315": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2315')"
+  },
+  "2401": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2401')"
+  },
+  "2402": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2402')"
+  },
+  "2403": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2403')"
+  },
+  "2404": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2404')"
+  },
+  "2405": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2405')"
+  },
+  "2406": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2406')"
+  },
+  "2407": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2407')"
+  },
+  "2408": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2408')"
+  },
+  "2409": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2409')"
+  },
+  "2410": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2410')"
+  },
+  "2411": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2411')"
+  },
+  "2412": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2412')"
+  },
+  "2413": {
+    "error": "500, message='Internal Server Error', url=URL('http://localhost:8000/api/v1/results/2413')"
+  }
+}

@@ -5,7 +5,7 @@ from datetime import datetime
 from openai import OpenAI
 from app.utils.image_analyzer import analyze_math_image
 import sqlite3
-
+import re
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -50,11 +50,11 @@ class DBManager:
                     CREATE TABLE IF NOT EXISTS grading_results (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         student_id TEXT,
-                        problem_key TEXT, 
+                        problem_key TEXT,
                         total_score REAL,
-                        max_score INTEGER,
-                        graded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (student_id) REFERENCES students(student_id)
+                        max_score REAL,
+                        grading_number INTEGER,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 ''')
 
@@ -63,11 +63,25 @@ class DBManager:
                     CREATE TABLE IF NOT EXISTS detailed_grading (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         grading_result_id INTEGER,
+                        student_id TEXT,
+                        problem_key TEXT,
                         criteria_item TEXT,
                         score REAL,
-                        max_score REAL,
                         feedback TEXT,
+                        grading_number INTEGER,
                         FOREIGN KEY (grading_result_id) REFERENCES grading_results(id)
+                    )
+                ''')
+
+                # 텍스트 추출 결과 테이블 추가
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS extracted_texts (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        student_id TEXT,
+                        problem_key TEXT,
+                        extracted_text TEXT,
+                        grading_number INTEGER,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 ''')
 
@@ -76,66 +90,63 @@ class DBManager:
         except Exception as e:
             logger.error(f"데이터베이스 초기화 실패: {str(e)}")
 
-    def save_grading_results(self, results):
-        """채점 결과를 데이터베이스에 저장"""
+    def save_grading_results(self, data):
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
-
-                for student_id, evaluations in results.items():
-                    # 학생 정보 저장
-                    cursor.execute(
-                        "INSERT OR IGNORE INTO students (student_id) VALUES (?)",
-                        (student_id,)
-                    )
-
-                    for eval_data in evaluations:
-                        problem_key = eval_data['problem_key']
-                        answer_text = eval_data.get('extracted_text', '')
-                        evaluation = eval_data['evaluation']
-                        max_score = eval_data['max_score']
-                        answer_time = eval_data.get(
-                            'answer_time', datetime.now().isoformat())
-
-                        # 학생 답안 저장
-                        cursor.execute('''
-                            INSERT INTO student_answers 
-                            (student_id, problem_key, answer_text, submitted_at)
-                            VALUES (?, ?, ?, ?)
-                        ''', (student_id, problem_key, answer_text, answer_time))
-
-                        # 전체 채점 결과 저장
-                        cursor.execute('''
-                            INSERT INTO grading_results 
-                            (student_id, problem_key, total_score, max_score, graded_at)
-                            VALUES (?, ?, ?, ?, ?)
-                        ''', (
-                            student_id,
-                            problem_key,
-                            evaluation.get('total_score', 0),
-                            max_score,
-                            datetime.now().isoformat()
-                        ))
-                        grading_result_id = cursor.lastrowid
-
-                        # 세부 채점 결과 저장
-                        for detail in evaluation.get('detailed_scores', []):
-                            cursor.execute('''
-                                INSERT INTO detailed_grading
-                                (grading_result_id, criteria_item, score, max_score, feedback)
-                                VALUES (?, ?, ?, ?, ?)
-                            ''', (
-                                grading_result_id,
-                                detail['criteria'],
-                                detail['score'],
-                                detail.get('max_score', max_score),
-                                json.dumps(detail['feedback'],
-                                           ensure_ascii=False)
-                            ))
-
+                
+                # 텍스트 추출 결과 저장
+                cursor.execute('''
+                    INSERT INTO extracted_texts 
+                    (student_id, problem_key, extracted_text, grading_number)
+                    VALUES (?, ?, ?, ?)
+                ''', (
+                    data['student_id'],
+                    data['problem_key'],
+                    data['extracted_text'],
+                    data['evaluation']['grading_number']
+                ))
+                
+                # 학생 정보 저장
+                cursor.execute(
+                    "INSERT OR IGNORE INTO students (student_id) VALUES (?)",
+                    (data['student_id'],)
+                )
+                
+                # 채점 결과 저장
+                cursor.execute('''
+                    INSERT INTO grading_results 
+                    (student_id, problem_key, total_score, max_score, grading_number)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', (
+                    data['student_id'],
+                    data['problem_key'],
+                    data['evaluation']['total_score'],
+                    data['evaluation']['max_score'],
+                    data['evaluation']['grading_number']
+                ))
+                
+                grading_result_id = cursor.lastrowid
+                
+                # 세부 채점 결과 저장
+                for detail in data['evaluation']['detailed_scores']:
+                    cursor.execute('''
+                        INSERT INTO detailed_grading
+                        (grading_result_id, student_id, problem_key, criteria_item, score, feedback, grading_number)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                        grading_result_id,
+                        data['student_id'],
+                        data['problem_key'],
+                        detail['criteria'],
+                        detail['score'],
+                        detail['feedback'],
+                        data['evaluation']['grading_number']
+                    ))
+                
                 conn.commit()
-                logger.info("채점 결과 저장 완료")
-
+                logger.info(f"채점 결과 및 텍스트 추출 결과 저장 완료 (채점 #{data['evaluation']['grading_number']})")
+                
         except Exception as e:
             logger.error(f"채점 결과 저장 실패: {str(e)}")
             raise
@@ -310,17 +321,21 @@ def grade_student_solutions(base_path='image/students', criteria_path='grading_c
             if problem_key in criteria:
                 evaluation = grade_answer_with_gpt(
                     extracted_text, criteria[problem_key])
+                
+                # 수정된 부분: grading_data 구조 변경
                 grading_data = {
-                    student_id: [{
-                        'problem_key': problem_key,
-                        'extracted_text': extracted_text,
-                        'evaluation': evaluation,
-                        'max_score': criteria[problem_key]['배점'],
-                        'answer_time': datetime.now().isoformat()  # 답변 시점 추가
-                    }]
+                    student_id: [  # 리스트로 변경
+                        {
+                            'problem_key': problem_key,
+                            'extracted_text': extracted_text,
+                            'evaluation': evaluation,
+                            'max_score': criteria[problem_key]['배점'],
+                            'answer_time': datetime.now().isoformat()
+                        }
+                    ]
                 }
 
-                # DB에 즉시 저장
+                # DB에 저장
                 if db_manager:
                     try:
                         db_manager.save_grading_results(grading_data)
@@ -328,10 +343,7 @@ def grade_student_solutions(base_path='image/students', criteria_path='grading_c
                     except Exception as e:
                         logger.error(f"DB 저장 실패 ({problem_key}): {str(e)}")
 
-                student_results.append(grading_data)
-                logger.info(f"{problem_key} 채점 완료")
-            else:
-                logger.warning(f"{problem_key}의 채점 기준을 찾을 수 없음")
+                student_results.append(grading_data[student_id][0])  # 수정된 부분
 
         results[student_id] = student_results
 
