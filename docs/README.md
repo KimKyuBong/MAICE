@@ -17,6 +17,7 @@ MAICE는 고등학교 수학 교육을 위한 AI 기반 채팅 시스템으로, 
 
 ### 🚀 [시작하기](./getting-started/)
 - [설치 가이드](./getting-started/installation.md) - Docker 기반 시스템 설치 및 환경 설정
+- [로컬 개발 가이드](./getting-started/local-setup-guide.md) - 로컬 재현을 위한 상세 설정 가이드 (Hybrid Mode)
 - [빠른 시작](./getting-started/quick-start.md) - 첫 번째 실행 가이드 및 기본 사용법
 - [개발 환경 설정](./getting-started/development-setup.md) - 개발자를 위한 환경 구성
 
