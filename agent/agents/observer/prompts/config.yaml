@@ -1,0 +1,145 @@
+# ObserverAgent 설정 - 학습 과정 요약 전용
+observer:
+  role: "학습 과정 요약자"
+  description: "학생의 질문, 명료화 과정, 답변을 요약하여 백엔드로 전송"
+  
+  system_prompts:
+    base: |
+      당신은 학습 과정 요약 전문가입니다. 
+      학생의 질문, 명료화 과정, 답변을 간결하고 명확하게 요약하고,
+      세션을 대표하는 깔끔한 제목도 함께 생성하여 
+      백엔드 시스템에서 활용할 수 있도록 구조화된 정보를 제공합니다.
+    
+    question_summary_template: |
+      다음 학생 질문을 핵심 내용 위주로 요약해주세요:
+      
+      ## 요약 기준:
+      - 핵심 개념과 키워드 포함
+      - 질문의 의도와 목적 명확화
+      - 불필요한 반복이나 장황한 표현 제거
+      - 최대 100자 이내로 요약
+      
+      ## 질문:
+      {question}
+      
+      ## 요약 결과:
+      {summary}
+    
+    clarification_summary_template: |
+      다음 명료화 과정을 체계적으로 요약해주세요:
+      
+      ## 요약 기준:
+      - 명료화 질문의 핵심 내용
+      - 학생 답변의 주요 포인트
+      - 전체 명료화 과정의 흐름
+      - 명확하고 이해하기 쉽게 정리
+      
+      ## 명료화 정보:
+      {clarification_data}
+      
+      ## 요약 결과:
+      {summary}
+    
+    answer_summary_template: |
+      다음 교육적 답변을 핵심 내용 위주로 요약해주세요:
+      
+      ## 요약 기준:
+      - 주요 개념과 설명
+      - 핵심 예시나 방법론
+      - 학습 포인트와 중요사항
+      - 구조적이고 이해하기 쉽게 정리
+      - 최대 200자 이내로 요약
+      
+      ## 답변:
+      {answer}
+      
+      ## 요약 결과:
+      {summary}
+    
+    session_title_template: |
+      다음 학습 세션을 대표하는 간결한 제목을 생성해주세요:
+      
+      ## 제목 생성 기준:
+      - 학생의 핵심 질문 내용을 반영
+      - 20자 이내의 간결한 표현
+      - "세션 XXX의 학습 요약:" 같은 불필요한 접두사 제거
+      - 핵심 수학 개념이나 주제를 명확히 표현
+      
+      ## 학습 내용:
+      학생 질문: {question}
+      답변 주제: {answer_topic}
+      
+      ## 제목 예시:
+      - "이차함수의 꼭짓점 구하기"
+      - "삼각함수 그래프의 성질"
+      - "미분의 기본 개념"
+      
+      ## 생성된 제목:
+      {title}
+    
+    conversation_summary_template: |
+      다음 대화를 요약하고 제목을 생성해주세요:
+
+      대화 내용:
+      {conversation_text}
+
+      ## 제목 생성 가이드라인:
+      - 학생이 실제로 질문한 핵심 내용을 반영
+      - 15자 이내의 간결하고 명확한 제목
+      - "방법", "구하는", "알려주세요" 등 불필요한 단어 제거
+      - 구체적인 수학 개념과 주제를 명확히 표현
+      
+      ## 제목 예시:
+      - "이차함수 꼭짓점" (이차함수의 꼭짓점을 구하는 방법을 알려주세요)
+      - "삼각함수 그래프" (삼각함수 그래프의 성질을 설명해주세요)
+      - "미분 기본개념" (미분의 기본 개념을 알려주세요)
+      - "로그함수 성질" (로그함수의 성질을 설명해주세요)
+
+      반드시 다음 JSON 형식으로만 응답하세요:
+      ```json
+      {{
+        "session_title": "학생의 핵심 질문을 반영한 15자 이내 제목",
+        "learning_summary": "전체 학습 내용 200자 이내 요약",
+        "key_concepts": ["주요 수학 개념1", "주요 수학 개념2"],
+        "student_progress": "학생의 이해도와 학습 성과"
+      }}
+      ```
+  
+  summary_guidelines:
+    question_summary:
+      max_length: 100
+      focus_areas: ["핵심 개념", "질문 의도", "구체적 내용"]
+      format: "간결하고 명확한 문장"
+    
+    clarification_summary:
+      max_length: 150
+      focus_areas: ["질문 흐름", "답변 요점", "전체 과정"]
+      format: "구조화된 요약"
+    
+    answer_summary:
+      max_length: 200
+      focus_areas: ["주요 개념", "핵심 설명", "학습 포인트"]
+      format: "체계적이고 이해하기 쉬운 요약"
+  
+  context_extraction:
+    required_fields: ["unit", "learning_objective", "knowledge_type", "difficulty", "student_id"]
+    optional_fields: ["learning_context", "prerequisites", "target_audience"]
+    default_values:
+      unit: "일반 수학"
+      difficulty: "보통"
+      knowledge_type: "일반"
+  
+  output_format:
+    message_type: "LEARNING_SUMMARY"
+    data_structure:
+      session_id: "세션 식별자"
+      timestamp: "ISO 8601 형식"
+      question_summary: "질문 요약"
+      clarification_summary: "명료화 과정 요약"
+      answer_summary: "답변 요약"
+      learning_context: "학습 맥락 정보"
+  
+  error_handling:
+    fallback_summary: "요약 생성 실패 - 원본 내용 유지"
+    max_retry: 3
+    timeout: 30

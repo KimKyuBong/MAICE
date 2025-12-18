@@ -1,0 +1,118 @@
+/* KaTeX 다크모드 지원을 위한 추가 스타일 */
+
+/* 기본 KaTeX 스타일 오버라이드 */
+.katex {
+	color: inherit !important;
+}
+
+/* 다크모드에서 KaTeX 스타일 */
+:root.dark .katex {
+	color: var(--maice-text-primary) !important;
+}
+
+/* KaTeX 디스플레이 모드 스타일 */
+.katex-display {
+	background: var(--maice-bg-card) !important;
+	border: 1px solid var(--maice-border-primary) !important;
+	border-radius: 0.5rem !important;
+	padding: 1rem !important;
+	margin: 1rem 0 !important;
+}
+
+/* KaTeX 인라인 모드 스타일 */
+.katex:not(.katex-display) {
+	background: var(--maice-bg-card) !important;
+	border: 1px solid var(--maice-border-primary) !important;
+	border-radius: 0.25rem !important;
+	padding: 0.125rem 0.375rem !important;
+	margin: 0 0.125rem !important;
+}
+
+/* 다크 테마에서 KaTeX 배경색 개선 */
+:root.dark .katex-display {
+	background: rgba(31, 41, 55, 0.6) !important;
+	border: 1px solid rgba(75, 85, 99, 0.3) !important;
+	backdrop-filter: blur(8px) !important;
+}
+
+:root.dark .katex:not(.katex-display) {
+	background: rgba(31, 41, 55, 0.4) !important;
+	border: 1px solid rgba(75, 85, 99, 0.2) !important;
+	backdrop-filter: blur(4px) !important;
+}
+
+/* KaTeX 내부 요소들의 색상 강제 설정 */
+.katex .base,
+.katex .mord,
+.katex .mrel,
+.katex .mbin,
+.katex .mopen,
+.katex .mclose,
+.katex .mpunct,
+.katex .minner,
+.katex .mop,
+.katex .accent-body,
+.katex .frac-line,
+.katex .sqrt-line {
+	color: inherit !important;
+}
+
+/* 다크모드에서 KaTeX 내부 요소들 */
+:root.dark .katex .base,
+:root.dark .katex .mord,
+:root.dark .katex .mrel,
+:root.dark .katex .mbin,
+:root.dark .katex .mopen,
+:root.dark .katex .mclose,
+:root.dark .katex .mpunct,
+:root.dark .katex .minner,
+:root.dark .katex .mop,
+:root.dark .katex .accent-body,
+:root.dark .katex .frac-line,
+:root.dark .katex .sqrt-line {
+	color: var(--maice-text-primary) !important;
+}
+
+/* KaTeX 분수선 색상 */
+.katex .frac-line {
+	border-bottom-color: currentColor !important;
+}
+
+/* KaTeX 루트 기호 색상 */
+.katex .sqrt-line {
+	border-top-color: currentColor !important;
+}
+
+/* KaTeX 괄호 색상 */
+.katex .delimsizing,
+.katex .delim-size1,
+.katex .delim-size2,
+.katex .delim-size3,
+.katex .delim-size4 {
+	color: inherit !important;
+}
+
+/* 다크모드에서 KaTeX 괄호 색상 */
+:root.dark .katex .delimsizing,
+:root.dark .katex .delim-size1,
+:root.dark .katex .delim-size2,
+:root.dark .katex .delim-size3,
+:root.dark .katex .delim-size4 {
+	color: var(--maice-text-primary) !important;
+}
+
+/* KaTeX 에러 메시지 스타일 */
+.katex-error {
+	color: var(--maice-error) !important;
+	background: var(--maice-bg-secondary) !important;
+	border: 1px solid var(--maice-error) !important;
+	border-radius: 0.25rem !important;
+	padding: 0.25rem 0.5rem !important;
+}
+
+/* 다크모드에서 KaTeX 에러 메시지 */
+:root.dark .katex-error {
+	color: #ef4444 !important;
+	background: var(--maice-bg-secondary) !important;
+	border-color: #ef4444 !important;
+}

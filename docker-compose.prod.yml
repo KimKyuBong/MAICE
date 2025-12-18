@@ -1,0 +1,36 @@
+services:
+  # Redis 서비스
+  redis:
+    image: redis:7-alpine
+    container_name: maicesystem_redis_1
+    networks:
+      - maice_network
+    restart: unless-stopped
+
+  # Nginx 서비스 (정적 파일 서빙 + 프록시)
+  nginx:
+    image: nginx:alpine
+    container_name: maicesystem_nginx_1
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d/maice-prod.conf:/etc/nginx/conf.d/default.conf:ro
+      # Blue-Green 배포: 두 디렉토리 모두 마운트, nginx 설정으로 전환
+      - ./front/dist-blue:/var/www/html-blue:ro
+      - ./front/dist-green:/var/www/html-green:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - maice_network
+    depends_on:
+      - redis
+    restart: unless-stopped
+    dns:
+      - 127.0.0.11
+    dns_search: []
+
+networks:
+  maice_network:
+    name: maicesystem_maice_network
+    driver: bridge

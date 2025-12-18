@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko" %sveltekit.theme%>
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/png" sizes="32x32" href="%sveltekit.assets%/favicon-32x32.png" />
+		<link rel="icon" type="image/png" sizes="16x16" href="%sveltekit.assets%/favicon-16x16.png" />
+		<link rel="shortcut icon" href="%sveltekit.assets%/favicon.ico" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content="MAICE - AI 학습 도우미 시스템 v0.0.3" />
+		<meta name="keywords" content="AI, 교육, 학습, 챗봇, MAICE" />
+		<meta name="author" content="MAICE System" />
+		
+		<!-- Manifest -->
+		<link rel="manifest" href="%sveltekit.assets%/manifest.json" />
+		
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="%sveltekit.url%" />
+		<meta property="og:title" content="MAICE - AI 학습 도우미" />
+		<meta property="og:description" content="AI와 함께 학습하는 새로운 경험" />
+		<meta property="og:image" content="%sveltekit.url%/icon-512.png" />
+		
+		<!-- Twitter -->
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:url" content="%sveltekit.url%" />
+		<meta property="twitter:title" content="MAICE - AI 학습 도우미" />
+		<meta property="twitter:description" content="AI와 함께 학습하는 새로운 경험" />
+		<meta property="twitter:image" content="%sveltekit.url%/icon-512.png" />
+		
+		<!-- PWA -->
+		<meta name="theme-color" content="#667eea" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+		<meta name="apple-mobile-web-app-title" content="MAICE" />
+		<link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon.png" />
+		
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>

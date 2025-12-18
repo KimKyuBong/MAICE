@@ -1,0 +1,351 @@
+@import "tailwindcss";
+
+/* ===== MAICE 테마 시스템 ===== */
+
+/* 라이트 테마 (기본) */
+:root {
+	/* 색상 팔레트 */
+	--maice-primary: #4b5563;
+	--maice-primary-hover: #374151;
+	--maice-primary-dark: #374151;
+	--maice-secondary: #6b7280;
+	--maice-success: #10b981;
+	--maice-warning: #f59e0b;
+	--maice-error: #ef4444;
+	
+	/* 성공 색상 (완료 표시) */
+	--maice-success-bg: #ecfdf5;
+	--maice-success-bg-light: #d1fae5;
+	--maice-success-border: #10b981;
+	--maice-success-text: #059669;
+	--maice-success-text-dark: #065f46;
+	--maice-success-shadow: rgba(16, 185, 129, 0.1);
+	
+	/* 경고 색상 (안내) */
+	--maice-warning-bg: #fef3c7;
+	--maice-warning-border: #fbbf24;
+	--maice-warning-text: #92400e;
+	
+	/* 에러 색상 */
+	--maice-error-bg-light: #fee2e2;
+	--maice-error-text-dark: #991b1b;
+	
+	/* 카드 배경 */
+	--maice-card-bg: #ffffff;
+	
+	/* 호버 배경 */
+	--maice-bg-hover: #f3f4f6;
+	
+	/* 배경 색상 */
+	--maice-bg-primary: #ffffff;
+	--maice-bg-secondary: #f9fafb;
+	--maice-bg-tertiary: #f3f4f6;
+	--maice-bg-card: #ffffff;
+	--maice-bg-overlay: rgba(0, 0, 0, 0.4);
+	--maice-bg-secondary-hover: #f3f4f6;
+	--maice-bg-ghost-hover: #f3f4f6;
+	
+	/* 텍스트 색상 */
+	--maice-text-primary: #111827;
+	--maice-text-secondary: #374151;
+	--maice-text-tertiary: #6b7280;
+	--maice-text-muted: #9ca3af;
+	--maice-text-on-primary: #ffffff;
+	--maice-text-ghost: #6b7280;
+	--maice-text-ghost-hover: #374151;
+	--maice-text-secondary-hover: #111827;
+	
+	/* 테두리 색상 */
+	--maice-border-primary: #e5e7eb;
+	--maice-border-secondary: #d1d5db;
+	--maice-border-tertiary: #9ca3af;
+	--maice-border-secondary-hover: #9ca3af;
+	--maice-border-ghost-hover: #d1d5db;
+	--maice-primary-border-hover: rgba(255, 255, 255, 0.2);
+	
+	/* 그림자 */
+	--maice-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	--maice-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+	--maice-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	--maice-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+	--maice-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+	
+	/* 간격 */
+	--maice-spacing-xs: 0.25rem;
+	--maice-spacing-sm: 0.5rem;
+	--maice-spacing-md: 1rem;
+	--maice-spacing-lg: 1.5rem;
+	--maice-spacing-xl: 2rem;
+	--maice-spacing-2xl: 3rem;
+	
+	/* 애니메이션 */
+	--maice-transition: all 0.2s ease-in-out;
+	--maice-transition-fast: all 0.1s ease-in-out;
+	--maice-transition-slow: all 0.3s ease-in-out;
+}
+
+/* 다크 테마 */
+:root.dark {
+	/* 색상 팔레트 */
+	--maice-primary: #9ca3af;
+	--maice-primary-hover: #d1d5db;
+	--maice-primary-dark: #6b7280;
+	
+	/* 성공 색상 (다크 테마) */
+	--maice-success-bg: #064e3b;
+	--maice-success-bg-light: #065f46;
+	--maice-success-border: #10b981;
+	--maice-success-text: #6ee7b7;
+	--maice-success-text-dark: #a7f3d0;
+	--maice-success-shadow: rgba(16, 185, 129, 0.2);
+	
+	/* 경고 색상 (다크 테마) */
+	--maice-warning-bg: #78350f;
+	--maice-warning-border: #d97706;
+	--maice-warning-text: #fde68a;
+	
+	/* 에러 색상 (다크 테마) */
+	--maice-error-bg-light: #7f1d1d;
+	--maice-error-text-dark: #fca5a5;
+	
+	/* 카드 배경 */
+	--maice-card-bg: #1f2937;
+	
+	/* 호버 배경 */
+	--maice-bg-hover: #374151;
+	
+	/* 배경 색상 */
+	--maice-bg-primary: #111827;
+	--maice-bg-secondary: #1f2937;
+	--maice-bg-tertiary: #374151;
+	--maice-bg-card: #1f2937;
+	--maice-bg-overlay: rgba(0, 0, 0, 0.6);
+	--maice-bg-secondary-hover: #374151;
+	--maice-bg-ghost-hover: #374151;
+	
+	/* 텍스트 색상 */
+	--maice-text-primary: #f9fafb;
+	--maice-text-secondary: #e5e7eb;
+	--maice-text-tertiary: #d1d5db;
+	--maice-text-muted: #9ca3af;
+	--maice-text-on-primary: #ffffff;
+	--maice-text-ghost: #9ca3af;
+	--maice-text-ghost-hover: #f9fafb;
+	--maice-text-secondary-hover: #f9fafb;
+	
+	/* 테두리 색상 */
+	--maice-border-primary: #374151;
+	--maice-border-secondary: #4b5563;
+	--maice-border-tertiary: #6b7280;
+	--maice-border-secondary-hover: #6b7280;
+	--maice-border-ghost-hover: #4b5563;
+	--maice-primary-border-hover: rgba(255, 255, 255, 0.2);
+	
+	/* 그림자 */
+	--maice-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+	--maice-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+	--maice-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+	--maice-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+	--maice-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* 기본 스타일 */
+body {
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	line-height: 1.6;
+	color: var(--maice-text-primary);
+	background-color: var(--maice-bg-primary);
+}
+
+/* MAICE 컴포넌트 스타일 */
+.maice-card {
+	background: var(--maice-bg-card);
+	border-radius: 1rem;
+	border: 1px solid var(--maice-border-primary);
+	box-shadow: var(--maice-shadow-sm);
+	position: relative;
+	overflow: hidden;
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.maice-card::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+	background: var(--maice-primary);
+	opacity: 0;
+	transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.maice-card:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--maice-shadow-lg);
+	border-color: var(--maice-border-secondary);
+}
+
+.maice-card:hover::before {
+	opacity: 1;
+}
+
+.maice-card-elevated {
+	box-shadow: var(--maice-shadow-xl);
+	border-color: var(--maice-border-secondary);
+}
+
+.maice-card-elevated:hover {
+	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+	transform: translateY(-4px);
+}
+
+.maice-card-sm {
+	padding: 0.75rem;
+}
+
+.maice-card-md {
+	padding: 1rem;
+}
+
+.maice-card-lg {
+	padding: 1.5rem;
+}
+
+.maice-card-xl {
+	padding: 2rem;
+}
+
+/* 애니메이션 */
+.maice-animation-fade-in {
+	animation: fadeIn 0.5s ease-out;
+}
+
+.maice-animation-slide-up {
+	animation: slideUp 0.5s ease-out;
+}
+
+.maice-animation-scale-in {
+	animation: scaleIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+	from { 
+		opacity: 0; 
+		transform: translateY(10px);
+	}
+	to { 
+		opacity: 1; 
+		transform: translateY(0);
+	}
+}
+
+@keyframes slideUp {
+	from { 
+		opacity: 0; 
+		transform: translateY(20px);
+	}
+	to { 
+		opacity: 1; 
+		transform: translateY(0);
+	}
+}
+
+@keyframes scaleIn {
+	from { 
+		opacity: 0; 
+		transform: scale(0.95);
+	}
+	to { 
+		opacity: 1; 
+		transform: scale(1);
+	}
+}
+
+/* 반응형 디자인 */
+@media (max-width: 640px) {
+	.maice-card {
+		border-radius: 0.75rem;
+	}
+	
+	.maice-card-lg {
+		padding: 1.25rem;
+	}
+	
+	.maice-card-xl {
+		padding: 1.5rem;
+	}
+}
+
+/* 테마 전환: transition 없음 - 즉시 전환, 파도 효과 완전 제거 */
+
+/* 특별한 그라데이션 효과를 위한 클래스 */
+.theme-gradient-transition {
+	position: relative;
+	overflow: hidden;
+}
+
+.theme-gradient-transition::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, 
+		transparent, 
+		rgba(255, 255, 255, 0.1), 
+		transparent
+	);
+	transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+	pointer-events: none;
+	z-index: 1;
+}
+
+.theme-gradient-transition:hover::before {
+	left: 100%;
+}
+
+/* 다크모드에서의 그라데이션 효과 */
+.dark .theme-gradient-transition::before {
+	background: linear-gradient(90deg, 
+		transparent, 
+		rgba(255, 255, 255, 0.05), 
+		transparent
+	);
+}
+
+/* 테마 전환 효과 제거됨 - 파도 효과 방지를 위해 */
+
+/* ===== 전역 마크다운 스타일 ===== */
+/* 이 스타일들은 MarkdownRenderer 컴포넌트 내부의 요소들에 직접 적용됩니다 */
+
+/* 마크다운 제목 크기 변수 */
+:root {
+	--maice-heading-1-size: 2.25rem;
+	--maice-heading-2-size: 1.75rem;
+	--maice-heading-3-size: 1.5rem;
+	--maice-heading-4-size: 1.375rem;
+	--maice-text-base-size: 1.1rem;
+	--maice-text-code-size: 1rem;
+	--maice-spacing-base: 1rem;
+	--maice-spacing-large: 1.5rem;
+	--maice-spacing-xl: 2rem;
+}
+
+/* 다크 테마에서도 동일한 크기 변수 사용 */
+:root.dark {
+	--maice-heading-1-size: 2.25rem;
+	--maice-heading-2-size: 1.75rem;
+	--maice-heading-3-size: 1.5rem;
+	--maice-heading-4-size: 1.375rem;
+	--maice-text-base-size: 1.1rem;
+	--maice-text-code-size: 1rem;
+	--maice-spacing-base: 1rem;
+	--maice-spacing-large: 1.5rem;
+	--maice-spacing-xl: 2rem;
+}
+
+/* 마크다운 스타일은 MarkdownRenderer 컴포넌트에서 관리됨 */
+
+/* 모든 마크다운 스타일은 MarkdownRenderer 컴포넌트에서 관리됨 */

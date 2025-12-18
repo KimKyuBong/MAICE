@@ -1,0 +1,52 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Logs & runtime artifacts
+*.log
+lognow.txt
+
+# Local test artifacts/results
+*_results.json
+mcp_*_results.json
+parallel_test_*_results.json
+clarification_test_results.json
+
+# Project-specific test output names
+/test_latest.log
+/test_output.log
+/test_output_new.log
+
+# Tester artifacts (often contain prompts/outputs)
+/tester/*.log
+/tester/data/*.json
+/tester/output/*.json
+
+# Test results directory (generated)
+/tests/results/*.json
+
+# Editor/IDE
+/.cursor/
+
+# Local analysis/data exports (may contain 개인정보/원본 데이터)
+/analysis/
+/data/
+
+# Generated RAG artifacts / large source documents
+/agent/agents/curriculum_term/tools/rag/

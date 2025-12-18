@@ -1,0 +1,212 @@
+version: '3.8'
+
+services:
+  # 기존 서비스들...
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: maice_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for session caching and WebSocket pub/sub
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Insight for monitoring (optional)
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+    profiles:
+      - monitoring
+
+  # Enhanced Backend with session management
+  backend:
+    build:
+      context: ./back
+      dockerfile: Dockerfile.dev
+    environment:
+      # Database
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/maice_db
+      
+      # Session Management
+      SESSION_BACKEND: hybrid  # database_only, hybrid, jwt_stateless, websocket
+      REDIS_URL: redis://redis:6379/0
+      
+      # Cache Settings
+      SESSION_CACHE_TTL: 3600
+      MESSAGE_CACHE_TTL: 1800
+      CONTEXT_CACHE_TTL: 7200
+      
+      # JWT Settings
+      JWT_SECRET_KEY: your-super-secret-jwt-key-change-in-production
+      JWT_ALGORITHM: HS256
+      JWT_SESSION_EXPIRE_HOURS: 24
+      JWT_CONTEXT_EXPIRE_HOURS: 2
+      
+      # WebSocket Settings
+      WEBSOCKET_HEARTBEAT_INTERVAL: 30
+      WEBSOCKET_MAX_CONNECTIONS: 1000
+      WEBSOCKET_MESSAGE_QUEUE_SIZE: 100
+      
+      # Performance
+      ENABLE_BACKGROUND_TASKS: true
+      BATCH_UPDATE_SIZE: 50
+      MAX_HISTORY_CACHE_SIZE: 100
+      
+      # Analytics
+      ENABLE_SESSION_ANALYTICS: true
+      ANALYTICS_RETENTION_DAYS: 90
+      
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./back:/app
+      - ./common:/app/common
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/sessions/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Agent Service (separate from backend for better scaling)
+  agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile.dev
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/maice_db
+      REDIS_URL: redis://redis:6379/1  # Different DB for agent
+      
+      # Agent-specific settings
+      AGENT_WORKER_CONCURRENCY: 4
+      AGENT_QUEUE_NAME: maice_agent_queue
+      
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./agent:/app
+      - ./common:/app/common
+
+  # Frontend with enhanced session support
+  frontend:
+    build:
+      context: ./front
+      dockerfile: Dockerfile.dev
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+      VITE_WS_BASE_URL: ws://localhost:8000
+      VITE_SESSION_BACKEND: hybrid
+      VITE_ENABLE_WEBSOCKET: true
+      VITE_ENABLE_JWT_TOKENS: true
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./front:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+  # Nginx for load balancing and WebSocket proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - backend
+      - frontend
+    profiles:
+      - production
+
+  # Session Analytics Service (optional)
+  analytics:
+    build:
+      context: ./analytics
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/maice_db
+      REDIS_URL: redis://redis:6379/2
+      ANALYTICS_SCHEDULE: "0 */6 * * *"  # Every 6 hours
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles:
+      - analytics
+
+  # Monitoring and Metrics
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  default:
+    name: maice-network

@@ -1,0 +1,718 @@
+<script lang="ts">
+	import { onMount, tick } from 'svelte';
+	import { browser } from '$app/environment';
+	import Button from '$lib/components/common/Button.svelte';
+	import Card from '$lib/components/common/Card.svelte';
+	import ThemeToggle from '$lib/components/common/ThemeToggle.svelte';
+	import ChatHeader from '$lib/components/maice/ChatHeader.svelte';
+	import MessageList from '$lib/components/maice/MessageList.svelte';
+	import MessageInput from '$lib/components/maice/MessageInput.svelte';
+	import SessionManager from '$lib/components/maice/SessionManager.svelte';
+	import { themeStore } from '$lib/stores/theme';
+	import { authStore } from '$lib/stores/auth';
+	import { goto } from '$app/navigation';
+	import { sendMAICEMessage, type MAICEChatRequest, submitQuestionStream } from '$lib/api';
+	
+	let currentTheme = 'auto';
+	let isDark = false;
+	let authToken = '';
+	let isAuthenticated = false;
+	let user = $state<any>(null);
+	
+	// 테마 상태 구독
+	themeStore.subscribe(state => {
+		currentTheme = state.current;
+		isDark = state.isDark;
+	});
+	
+	// 인증 상태 구독 (클라이언트 사이드에서만)
+	if (browser) {
+		authStore.subscribe(state => {
+			authToken = state.user?.access_token || '';
+			isAuthenticated = state.isAuthenticated;
+			user = state.user;
+		});
+	}
+	
+	// 페이지 로드 시 실행
+	$effect(() => {
+		if (isAuthenticated) {
+			console.log('✅ 인증된 사용자:', user?.username, '역할:', user?.role);
+			console.log('🔑 인증 토큰:', authToken);
+		}
+	});
+	
+
+	
+	// 채팅 관련 상태
+	let messages: Array<{
+		id: number;
+		type: 'user' | 'ai';
+		content: string;
+		timestamp: string;
+		isClarification?: boolean;
+	}> = $state([
+		{
+			id: 1,
+			type: 'ai' as const,
+			content: '안녕하세요! MAICE AI 학습 도우미입니다. 고등학교 수학 학습을 도와드리겠습니다! 📚\n\n## **수학 학습 예시:**\n\n### 이차방정식\n`$x^2 + 2x + 1 = 0$`의 해를 구해주세요\n\n### 미분\n`$f(x) = x^2$`의 도함수를 구해주세요\n\n### 적분\n`$\\int x^2 dx$`를 계산해주세요\n\n### 삼각함수\n`$\\sin(30°)$`의 값을 구해주세요\n\n## **개념 설명도 가능합니다:**\n\n> 이차함수의 그래프가 어떻게 그려지는지 설명해주세요\n> 미분의 기하학적 의미는 무엇인가요?\n> 적분과 미분의 관계를 설명해주세요\n\n### **지원하는 기능:**\n- **수식 렌더링**: LaTeX 수식 완벽 지원\n- **마크다운**: 제목, 강조, 코드 블록 등\n- **실시간 응답**: 스트리밍 방식의 답변\n\n고등학교 수학의 모든 영역을 도와드릴 수 있습니다! 🎯',
+			timestamp: new Date().toLocaleTimeString()
+		}
+	]);
+
+	// 답변 중복 방지를 위한 상태
+	let isAnswerCompleted = $state(false);
+
+	// 메시지 배열 변경 감지
+	$effect(() => {
+		console.log('🔄 메시지 배열 변경됨:', messages.length, '개');
+		console.log('📝 최신 메시지:', $inspect(messages[messages.length - 1]));
+	});
+
+	let isLoading = $state(false);
+	let sessionId = $state<number | null>(null);
+	let requestId = $state<string | null>(null);
+	let messageInputRef: any = null;
+	
+	// 명료화 관련 상태 (단순화)
+	let currentClarificationField = $state<string | null>(null);
+	
+	// 세션 관리 사이드바 상태
+	let isSessionSidebarOpen = $state(false);
+	
+	// isLoading 상태 변경 감지
+	$effect(() => {
+		console.log('🔄 isLoading 상태 변경됨:', $inspect(isLoading));
+	});
+
+	// 명료화 필드 상태 변경 감지
+	$effect(() => {
+		console.log('🔄 명료화 필드 상태 변경됨:', $inspect(currentClarificationField));
+		
+		// 로딩 중이 아닐 때 입력 필드 활성화
+		if (!isLoading && messageInputRef) {
+			setTimeout(() => {
+				if (messageInputRef && typeof messageInputRef.focus === 'function') {
+					messageInputRef.focus();
+				}
+			}, 100);
+		}
+	});
+	
+	// 메시지 입력 이벤트 핸들러
+	function handleMessageInput(event: CustomEvent) {
+		console.log('📝 부모 컴포넌트: input 이벤트 수신됨');
+		console.log('📋 이벤트 상세:', event.detail);
+		console.log('📋 이벤트 타입:', event.type);
+		console.log('📋 이벤트 타겟:', event.target);
+	}
+	
+	// 세션 관련 함수들
+	function handleSessionSelect(sessionId: number) {
+		sessionId = sessionId;
+		isSessionSidebarOpen = false; // 사이드바 닫기
+		console.log('🔗 세션 선택됨:', sessionId);
+	}
+	
+	function handleNewSession() {
+		sessionId = null;
+		messages = [
+			{
+				id: 1,
+				type: 'ai' as const,
+				content: '안녕하세요! MAICE AI 학습 도우미입니다. 고등학교 수학 학습을 도와드리겠습니다! 📚\n\n**수학 학습 예시:**\n- **이차방정식**: `$x^2 + 2x + 1 = 0$`의 해를 구해주세요\n- **미분**: `$f(x) = x^2$`의 도함수를 구해주세요\n- **적분**: `$\\int x^2 dx$`를 계산해주세요\n- **삼각함수**: `$\\sin(30°)$`의 값을 구해주세요\n\n**개념 설명도 가능합니다:**\n- 이차함수의 그래프가 어떻게 그려지는지 설명해주세요\n- 미분의 기하학적 의미는 무엇인가요?\n- 적분과 미분의 관계를 설명해주세요\n\n고등학교 수학의 모든 영역을 도와드릴 수 있습니다! 🎯',
+				timestamp: new Date().toLocaleTimeString()
+			}
+		];
+		currentClarificationField = null;
+		console.log('🆕 새 세션 생성됨');
+	}
+	
+	// 메시지 전송 이벤트 핸들러
+	async function handleMessageSend(event: CustomEvent) {
+		console.log('🚀 부모 컴포넌트: send 이벤트 수신됨');
+		console.log('📋 이벤트 상세:', event.detail);
+		console.log('📋 이벤트 타입:', event.type);
+		console.log('📋 이벤트 타겟:', event.target);
+		
+		const message = event.detail.message;
+		console.log('🚀 메시지 전송 시작:', message);
+		
+		if (!message.trim()) {
+			console.warn('⚠️ 빈 메시지 전송 시도');
+			return;
+		}
+		
+		// 사용자 메시지 추가
+		const userMessage = {
+			id: messages.length + 1,
+			type: 'user' as const,
+			content: message,
+			timestamp: new Date().toLocaleTimeString()
+		};
+		
+		console.log('👤 사용자 메시지 생성:', userMessage);
+		
+		// 배열 업데이트 - 반응성 보장
+		messages = [...messages, userMessage];
+		console.log('📝 메시지 배열 업데이트됨, 총 개수:', messages.length);
+		console.log('📋 현재 메시지 배열:', messages);
+		
+		isLoading = true;
+		
+		try {
+			console.log('🚀 SSE 스트리밍 시작...');
+			console.log('🔑 인증 토큰:', authToken ? '있음' : '없음');
+			console.log('📝 질문:', message);
+			console.log('🆔 세션 ID:', sessionId);
+			
+			// SSE 스트리밍을 사용하여 질문 처리
+			// 현재 세션 ID와 요청 ID 사용
+			const currentSessionId = sessionId || undefined;
+			const currentRequestId = requestId || undefined;
+			
+			console.log('🚀 질문 처리 시작:', {
+				currentSessionId,
+				currentRequestId,
+				originalSessionId: sessionId,
+				originalRequestId: requestId
+			});
+			
+			// 메시지 타입 설정 (명료화 필드가 있으면 명료화 응답)
+			const messageType = currentClarificationField ? 'clarification_response' : 'question';
+			
+			await submitQuestionStream(
+				authToken,
+				message,
+				currentSessionId,
+				messageType,  // 메시지 타입 전달
+				// 메시지 수신 콜백
+				(data) => {
+					console.log('📨 SSE 메시지 수신:', data);
+					console.log('📊 메시지 타입:', data.type);
+					console.log('📊 메시지 상태:', data.status);
+					console.log('📊 메시지 내용:', data);
+					console.log('🔍 session_id 확인:', data.session_id, '타입:', typeof data.session_id);
+					console.log('🔍 request_id 확인:', data.request_id, '타입:', typeof data.request_id);
+					
+					// 메시지 타입에 따른 처리 (단순화)
+					if (data.type === 'connected') {
+						// 연결 메시지
+						console.log('🔗 연결됨:', data);
+						
+						// session_id와 request_id 저장
+						if (data.session_id !== undefined && data.session_id !== null) {
+							sessionId = data.session_id;
+							console.log('✅ 세션 ID 저장:', sessionId);
+						}
+						if (data.request_id) {
+							requestId = data.request_id;
+							console.log('✅ 요청 ID 저장:', requestId);
+						}
+						
+						console.log('✅ 연결 정보 저장 완료:', { sessionId, requestId });
+						
+					} else if (data.type === 'clarification_question') {
+						// 명료화 질문 메시지 처리
+						console.log('🔍 명료화 질문 수신:', data);
+						
+						// 명료화 질문의 request_id와 session_id 저장
+						if (data.request_id) {
+							requestId = data.request_id;
+							console.log('🔗 명료화 질문 request_id 저장:', requestId);
+						}
+						if (data.session_id !== undefined && data.session_id !== null) {
+							sessionId = data.session_id;
+							console.log('🔗 명료화 질문 session_id 저장:', sessionId);
+						}
+						
+						// 질문 내용을 표시
+						const questionContent = data.message || '추가 정보가 필요합니다.';
+						
+						const clarificationMessage = {
+							id: messages.length + 1,
+							type: 'ai' as const,
+							content: questionContent,
+							timestamp: new Date().toLocaleTimeString()
+						};
+						
+						messages = [...messages, clarificationMessage];
+						console.log('📝 명료화 질문 메시지 추가됨:', clarificationMessage);
+						
+						// 명료화 질문 후 로딩 상태 해제
+						isLoading = false;
+						
+					} else if (data.type === 'answer_chunk') {
+						// 답변 청크 메시지 처리
+						console.log('📝 답변 청크 수신:', data);
+						
+						// 기존 AI 메시지가 있는지 확인하고 업데이트
+						let existingMessage = messages.find(m => m.type === 'ai' && (m as any).isStreaming);
+						
+						if (!existingMessage) {
+							// 새로운 스트리밍 메시지 생성
+							existingMessage = {
+								id: messages.length + 1,
+								type: 'ai' as const,
+								content: '',
+								timestamp: new Date().toLocaleTimeString()
+							};
+							(existingMessage as any).isStreaming = true;
+							messages = [...messages, existingMessage];
+						}
+						
+						// 청크 내용을 기존 메시지에 추가
+						existingMessage.content += data.chunk + '\n';
+						
+						// 메시지 배열 업데이트 트리거
+						messages = [...messages];
+						
+					} else if (data.type === 'answer_complete') {
+						// 답변 완료 메시지
+						console.log('✅ 답변 완료:', data);
+						
+						// 스트리밍 메시지의 스트리밍 상태 해제
+						const streamingMessage = messages.find(m => m.type === 'ai' && (m as any).isStreaming);
+						if (streamingMessage) {
+							(streamingMessage as any).isStreaming = false;
+							messages = [...messages];
+						}
+						
+						// 로딩 상태 해제
+						isLoading = false;
+						
+					} else if (data.type === 'processing') {
+						// 처리 중 메시지
+						console.log('⏳ 처리 중:', data.message);
+						
+					} else if (data.message) {
+						// 일반 메시지 처리
+						const aiResponse = {
+							id: messages.length + 1,
+							type: 'ai' as const,
+							content: data.message,
+							timestamp: new Date().toLocaleTimeString()
+						};
+						
+						messages = [...messages, aiResponse];
+						console.log('📝 AI 응답 메시지 추가됨:', aiResponse);
+						
+						// 로딩 상태 해제
+						isLoading = false;
+							console.log('📝 명료화 메시지 추가됨:', clarificationMessage);
+							
+							// 명료화 질문 후 로딩 상태 해제
+							isLoading = false;
+						}
+						
+						// complete 이벤트에서는 답변을 추가하지 않음 (중복 방지)
+						else if (data.assistant_markdown) {
+							console.log('⚠️ complete 이벤트에서 assistant_markdown 발견, 중복 방지로 추가하지 않음');
+							
+							// 로딩 상태만 해제
+							isLoading = false;
+							isClarificationMode = false;
+							currentClarificationRequest = null;
+						}
+						
+						// 아무것도 없는 경우 기본 메시지
+						else {
+							console.log('⚠️ 완료되었지만 내용이 없음');
+							const defaultMessage = {
+								id: messages.length + 1,
+								type: 'ai' as const,
+								content: '질문을 처리했습니다. 추가 정보가 필요할 수 있습니다.',
+								timestamp: new Date().toLocaleTimeString()
+							};
+							
+							messages = [...messages, defaultMessage];
+							
+							// 기본 메시지 후 로딩 상태 해제
+							isLoading = false;
+						}
+						
+					} else {
+						// 기타 메시지
+						console.log('📨 기타 메시지:', data);
+					}
+				},
+				// 에러 콜백
+				(error) => {
+					console.error('❌ SSE 스트리밍 오류:', error);
+					const errorMessage = {
+						id: messages.length + 1,
+						type: 'ai' as const,
+						content: `❌ 오류가 발생했습니다: ${error.message}`,
+						timestamp: new Date().toLocaleTimeString()
+					};
+					messages = [...messages, errorMessage];
+					
+					// 에러 발생 시 로딩 상태 해제 및 명료화 모드 종료
+					isLoading = false;
+					isClarificationMode = false;
+					currentClarificationRequest = null;
+				},
+				// 완료 콜백
+				() => {
+					console.log('✅ SSE 스트리밍 완료');
+					
+					// 스트리밍 완료 후 로딩 상태 해제
+					isLoading = false;
+					
+					// 명료화 모드가 아닌 경우에만 명료화 모드 종료
+					// (명료화 질문이 있는 경우는 유지)
+					if (!currentClarificationRequest) {
+						isClarificationMode = false;
+					}
+				}
+			);
+			
+			console.log('✅ SSE 스트리밍 호출 완료');
+			
+		} catch (error) {
+			console.error('💥 질문 처리 중 오류:', error);
+			const errorMessage = {
+				id: messages.length + 1,
+				type: 'ai' as const,
+				content: `❌ 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`,
+				timestamp: new Date().toLocaleTimeString()
+			};
+			messages = [...messages, errorMessage];
+			
+			// 에러 발생 시 로딩 상태 해제 및 명료화 모드 종료
+			isLoading = false;
+			isClarificationMode = false;
+			currentClarificationRequest = null;
+		}
+	}
+	
+	function handleBackToDashboard() {
+		goto('/dashboard');
+	}
+	
+	function handleClearChat() {
+		console.log('🔄 새 대화 시작');
+		
+		// 세션 및 요청 ID 초기화
+		sessionId = null;
+		requestId = null;
+		
+		// 입력 필드 초기화
+		if (messageInputRef && typeof messageInputRef.clear === 'function') {
+			messageInputRef.clear();
+		}
+		
+		// 명료화 모드 종료
+		isClarificationMode = false;
+		currentClarificationRequest = null;
+		
+		messages = [
+			{
+				id: 1,
+				type: 'ai' as const,
+				content: '안녕하세요! MAICE AI 학습 도우미입니다. 무엇을 도와드릴까요?\n\n**사용 예시:**\n- 수학 문제: `$x^2 + 2x + 1 = 0$`의 해를 구해주세요\n- 물리 공식: `$$E = mc^2$$`에 대해 설명해주세요\n- 코드 설명: ```python\nprint("Hello, World!")\n```\n\n마크다운과 LaTeX 수식을 모두 지원합니다! 📚✨',
+				timestamp: new Date().toLocaleTimeString()
+			}
+		];
+	}
+</script>
+
+<svelte:head>
+	<title>MAICE AI 학습 도우미 - MAICE</title>
+</svelte:head>
+
+<div class="maice-page">
+	<!-- 헤더 -->
+	<header class="maice-header">
+		<div class="maice-container">
+			<div class="maice-header-left">
+				<Button variant="ghost" size="sm" on:click={handleBackToDashboard}>
+					← 대시보드로 돌아가기
+				</Button>
+				<h1 class="maice-title">MAICE AI 학습 도우미</h1>
+			</div>
+			<div class="maice-header-right">
+				<Button 
+					variant="ghost" 
+					size="sm" 
+					on:click={() => isSessionSidebarOpen = !isSessionSidebarOpen}
+				>
+					{isSessionSidebarOpen ? '📋' : '💬'} 세션 관리
+				</Button>
+				{#if user}
+					<span class="maice-user-info">
+						안녕하세요, <span class="maice-username">{user.username}</span>님
+					</span>
+				{/if}
+				<Button variant="ghost" size="sm" on:click={() => goto('/')}>
+					로그아웃
+				</Button>
+				<ThemeToggle />
+			</div>
+		</div>
+	</header>
+
+	<!-- 메인 콘텐츠 -->
+	<main class="maice-main">
+		<div class="maice-container">
+			<!-- 세션 관리 사이드바 -->
+			{#if isSessionSidebarOpen}
+				<div class="maice-session-sidebar">
+					<Card variant="elevated" animation="slide-up" className="maice-session-card">
+						<SessionManager
+							{authToken}
+							currentSessionId={sessionId}
+							onSessionSelect={handleSessionSelect}
+							onNewSession={handleNewSession}
+						/>
+					</Card>
+				</div>
+			{/if}
+			
+			<!-- 채팅 인터페이스 -->
+			<Card variant="elevated" animation="fade-in" className="maice-chat-container">
+				<ChatHeader 
+					{sessionId} 
+					{requestId} 
+					onClearChat={handleClearChat} 
+				/>
+				
+				<!-- 세션 정보 표시 -->
+				<div class="maice-session-info">
+					<div class="maice-session-item">
+						<span class="maice-session-label">세션 ID:</span>
+						<span class="maice-session-value">
+							{#if sessionId}
+								{sessionId}
+							{:else}
+								<span class="maice-session-null">없음</span>
+							{/if}
+						</span>
+					</div>
+					<div class="maice-session-item">
+						<span class="maice-session-label">요청 ID:</span>
+						<span class="maice-session-value">
+							{#if requestId}
+								{requestId.slice(0, 8)}...
+							{:else}
+								<span class="maice-session-null">없음</span>
+							{/if}
+						</span>
+					</div>
+					<div class="maice-session-item">
+						<span class="maice-session-label">명료화 모드:</span>
+						<span class="maice-session-value">
+							{#if isClarificationMode}
+								<span class="maice-session-active">활성</span>
+							{:else}
+								<span class="maice-session-inactive">비활성</span>
+							{/if}
+						</span>
+					</div>
+				</div>
+				
+				<!-- 메시지 목록 -->
+				<MessageList {messages} {isLoading} />
+				
+				<!-- 메시지 입력 -->
+				<MessageInput
+					placeholder={isClarificationMode ? "명료화 질문에 답변해주세요..." : "수학 질문을 입력하세요... (LaTeX 수식 지원: $x^2 + 1$)"}
+					disabled={isLoading}
+					isClarificationMode={isClarificationMode}
+					{isLoading}
+					on:input={handleMessageInput}
+					on:send={handleMessageSend}
+					bind:this={messageInputRef}
+				/>
+			</Card>
+
+			<!-- 사용 팁 -->
+			<Card variant="default" animation="slide-up" className="maice-tips">
+				<h3>💡 사용 팁</h3>
+				<div class="maice-tips-grid">
+					<div class="maice-tip">
+						<h4>📚 학습 질문</h4>
+						<p>"수학 문제를 풀어주세요", "영어 문법을 설명해주세요"</p>
+					</div>
+					<div class="maice-tip">
+						<h4>🔍 개념 설명</h4>
+						<p>"양자역학이 뭔가요?", "인공지능의 원리는?"</p>
+					</div>
+					<div class="maice-tip">
+						<h4>✍️ 과제 도움</h4>
+						<p>"에세이 구조를 제안해주세요", "프로젝트 아이디어가 필요해요"</p>
+					</div>
+				</div>
+			</Card>
+		</div>
+	</main>
+</div>
+
+<style>
+	.maice-page {
+		min-height: 100vh;
+		background: var(--maice-bg-primary);
+		color: var(--maice-text-primary);
+	}
+
+	.maice-header {
+		background: var(--maice-bg-card);
+		border-bottom: 1px solid var(--maice-border-primary);
+		padding: 1rem 0;
+		position: sticky;
+		top: 0;
+		z-index: 100;
+		backdrop-filter: blur(10px);
+	}
+
+	.maice-container {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 1rem;
+	}
+
+	.maice-header .maice-container {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.maice-header-left {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.maice-title {
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: var(--maice-text-primary);
+		margin: 0;
+	}
+
+	.maice-header-right {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.maice-user-info {
+		font-size: 0.875rem;
+		color: var(--maice-text-secondary);
+	}
+
+	.maice-username {
+		font-weight: 600;
+		color: var(--maice-text-primary);
+	}
+
+	.maice-main {
+		padding: 2rem 0;
+	}
+
+	/* 세션 관리 사이드바 */
+	.maice-session-sidebar {
+		position: fixed;
+		left: 1rem;
+		top: 50%;
+		transform: translateY(-50%);
+		width: 320px;
+		max-height: 80vh;
+		z-index: 200;
+	}
+
+	.maice-session-card {
+		height: 100%;
+		max-height: 80vh;
+		overflow: hidden;
+	}
+
+	/* 세션 정보 */
+	.maice-session-info {
+		display: flex;
+		gap: 2rem;
+		padding: 1rem;
+		background: var(--maice-bg-secondary);
+		border: 1px solid var(--maice-border-secondary);
+		border-radius: 0.5rem;
+		margin-bottom: 1rem;
+		font-size: 0.875rem;
+	}
+
+	.maice-session-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.maice-session-label {
+		font-weight: 600;
+		color: var(--maice-text-secondary);
+	}
+
+	.maice-session-value {
+		font-family: 'Courier New', monospace;
+		color: var(--maice-text-primary);
+	}
+
+	.maice-session-null {
+		color: var(--maice-text-tertiary);
+		font-style: italic;
+	}
+
+	.maice-session-active {
+		color: #10b981;
+		font-weight: 600;
+	}
+
+	.maice-session-inactive {
+		color: var(--maice-text-tertiary);
+	}
+
+	/* 사용 팁 */
+	.maice-tips-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.maice-tip {
+		text-align: center;
+		padding: 1rem;
+	}
+
+	.maice-tip h4 {
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--maice-text-primary);
+		margin: 0 0 0.75rem 0;
+	}
+
+	.maice-tip p {
+		font-size: 0.875rem;
+		color: var(--maice-text-secondary);
+		margin: 0;
+		line-height: 1.5;
+	}
+
+	/* 반응형 디자인 */
+	@media (max-width: 768px) {
+		.maice-header .maice-container {
+			flex-direction: column;
+			gap: 1rem;
+		}
+		
+		.maice-header-left {
+			flex-direction: column;
+			gap: 0.5rem;
+		}
+		
+		.maice-title {
+			font-size: 1.25rem;
+		}
+		
+		.maice-tips-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

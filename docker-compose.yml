@@ -1,0 +1,103 @@
+
+services:
+  # PostgreSQL 데이터베이스
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: maice_web
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - maice_network
+    ports:
+      - "5432:5432"
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    networks:
+      - maice_network
+    ports:
+      - "6379:6379"
+
+  # 백엔드 서비스
+  maice-back:
+    build:
+      context: ./back
+      dockerfile: Dockerfile.dev
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/maice_web
+      REDIS_URL: redis://redis:6379
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8000/auth/google/callback}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      ENVIRONMENT: development
+      ENABLE_MAICE_TEST: true
+    volumes:
+      - ./back:/app
+    networks:
+      - maice_network
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8000:8000"
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --loop uvloop --reload
+
+  # 프론트엔드 서비스
+  maice-front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile.dev
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+      VITE_USE_MOCK_API: false
+      VITE_HOST: 0.0.0.0
+      VITE_ENVIRONMENT: development
+      VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      VITE_GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:5173/auth/callback}
+    volumes:
+      - ./front:/app
+      - /app/node_modules
+    networks:
+      - maice_network
+    ports:
+      - "5173:5173"
+    command: yarn dev --host 0.0.0.0
+
+  # MAICE 에이전트 서비스
+  maice-agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile.dev
+      args:
+        MCP_API_KEY: ${MCP_API_KEY:-default-mcp-key}
+    env_file:
+      - .env
+    environment:
+      AGENT_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/maice_agent
+      REDIS_URL: redis://redis:6379
+      ENVIRONMENT: development
+      MCP_API_KEY: ${MCP_API_KEY:-default-mcp-key}
+    volumes:
+      - ./agent:/app
+    networks:
+      - maice_network
+    depends_on:
+      - postgres
+      - redis
+    command: python worker.py
+
+
+  
+networks:
+  maice_network:
+    driver: bridge
+
+volumes:
+  postgres_data:

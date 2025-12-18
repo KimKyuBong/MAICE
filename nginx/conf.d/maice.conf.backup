@@ -1,0 +1,150 @@
+# 프로덕션 서버 (정적 파일 서빙)
+server {
+    listen 80;
+    server_name localhost;  # 실제 도메인으로 변경
+    
+    # Health check 엔드포인트
+    location /health {
+        proxy_pass http://maice-back:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # 정적 파일 직접 서빙 - SPA 프론트엔드 (프로덕션)
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+        try_files $uri $uri/ /index.html;  # SPA 라우팅을 위한 fallback
+        
+        # 정적 파일 캐싱 설정
+        expires 1h;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    # 백엔드 API
+    location /api/ {
+        limit_req zone=api burst=20 nodelay;
+        
+        proxy_pass http://maice-back:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # SSE 스트리밍을 위한 필수 설정
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        
+        # SSE 버퍼링 비활성화
+        proxy_buffering off;
+        proxy_cache off;
+        
+        # SSE 타임아웃 설정 (길게)
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 300s;
+    }
+    
+    # 로그인 API (Rate limiting 강화)
+    location /api/auth/login {
+        limit_req zone=login burst=5 nodelay;
+        
+        proxy_pass http://maice-back:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # 파일 업로드 (크기 제한)
+    client_max_body_size 10M;
+    
+    # 에러 페이지
+    error_page 404 /404.html;
+    error_page 500 502 503 504 /50x.html;
+}
+
+# 개발 서버 (포트 3000) - Hot Reload 지원
+server {
+    listen 3000;
+    server_name localhost;
+    
+    # 개발 서버 - Vite 개발 서버 (Hot Reload)
+    location / {
+        proxy_pass http://front-dev:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # 개발용 설정 (Hot Reload 지원)
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # 개발용 타임아웃 설정
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+    
+    # 개발용 백엔드 API
+    location /api/ {
+        proxy_pass http://maice-back:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # SSE 스트리밍을 위한 필수 설정
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        
+        # SSE 버퍼링 비활성화
+        proxy_buffering off;
+        proxy_cache off;
+        
+        # SSE 타임아웃 설정
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 300s;  # SSE는 오래 걸릴 수 있음
+        
+        # SSE 헤더 설정
+        proxy_set_header Accept-Encoding "";
+        add_header Cache-Control "no-cache";
+        add_header Connection "keep-alive";
+    }
+}
+
+# 백엔드 직접 접근용 (포트 8000) - 개발/테스트용
+server {
+    listen 8000;
+    server_name localhost;
+    
+    # 백엔드 API 프록시
+    location / {
+        proxy_pass http://back:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # API 타임아웃 설정
+        proxy_connect_timeout 30s;
+        proxy_send_timeout 30s;
+        proxy_read_timeout 30s;
+    }
+    
+    # 로그인 API (Rate limiting)
+    location /api/auth/login {
+        limit_req zone=login burst=5 nodelay;
+        
+        proxy_pass http://back:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

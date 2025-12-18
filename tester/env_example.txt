@@ -1,0 +1,12 @@
+# 테스터 환경 설정
+TEST_MODE=combined          # combined, original, persona
+NUM_QUESTIONS=5            # 테스트할 질문 수
+REDIS_URL=redis://localhost:6379
+
+# OpenAI 설정 (LLM 기반 질문 생성용)
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o-mini
+
+# 로깅 설정
+LOG_LEVEL=INFO
+LOG_FILE=advanced_tester.log
