@@ -197,9 +197,9 @@ yarn build
 
 ## 📄 라이선스
 
-© 2024 MAICE System. All rights reserved.
+© 2025 MAICE System. All rights reserved.
 
 ---
 
 **개발팀**: MAICE Frontend Team  
-**최종 업데이트**: 2024년 1월
+**최종 업데이트**: 2025년 12월
