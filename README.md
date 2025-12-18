@@ -49,13 +49,14 @@ MAICESystem/
 ├── tester/              # 시스템 테스트 및 평가 도구
 ├── nginx/               # 리버스 프록시 및 정적 파일 서빙
 ├── docs/                # 체계화된 문서 시스템
+├── deploy-scripts/      # 배포 스크립트 (Groovy Pipeline 등)
 └── docker-compose.yml   # 전체 시스템 오케스트레이션
 ```
 
 ## 🚀 주요 구성 요소
 
 ### 1. 백엔드 서버 (back/)
-- **기술 스택**: FastAPI 0.104.1, SQLAlchemy 2.0.23, PostgreSQL 15, Redis 7, Alembic
+- **기술 스택**: FastAPI 0.115.0, SQLAlchemy 2.0.23, PostgreSQL 15, Redis 7, Alembic
 - **아키텍처**: API 전용 서버 (SPA 모드 지원)
 - **주요 기능**:
   - JWT 기반 사용자 인증 및 권한 관리 (학생/교사/관리자)
@@ -66,6 +67,7 @@ MAICESystem/
   - 데이터베이스 마이그레이션 (Alembic)
   - 설문 응답 및 피드백 수집
   - A/B 테스트 지원 (Agent vs FreePass 모드)
+  - Google Gemini (Generative AI) 통합 지원
 
 #### API 구조
 - `/api/v1/auth/` - 인증 관련 (JWT, Google OAuth, 토큰 관리)
@@ -114,8 +116,9 @@ MAICESystem/
   - 커리큘럼 기반 학습 가이드
   - 대화 세션 요약 및 학습 진도 추적
   - 자유 대화 및 일반 질문 처리
+  - 교과과정 용어 분석 및 검증 (RAG 기반)
 
-#### 에이전트 구성 (5개 독립 에이전트)
+#### 에이전트 구성 (6개 독립 에이전트)
 - **QuestionClassifierAgent**: 질문 유형 분류 및 품질 평가
   - 12개 세부 항목별 점수 평가 (0, 0.5, 1점)
   - 답변 가능성 판단 (answerable/needs_clarify)
@@ -132,6 +135,10 @@ MAICESystem/
 - **FreeTalkerAgent**: 자유 대화 및 일반 질문 처리
   - 수학 외 일반 질문 처리
   - 친근한 대화 및 학습 동기 부여
+- **CurriculumTermAgent**: 교과과정 용어 분석 및 검증
+  - 질문 내 핵심 수학 개념 추출 및 수준 판단
+  - RAG 기반 교과과정/교과서 검색
+  - 답변 용어 적절성 검증 및 수정 제안
 
 #### 도구 (Tools) - 7개 Desmos 통합 도구
 - **desmos_graph_tool.py**: 기본 그래프 생성 및 시각화
