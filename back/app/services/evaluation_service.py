@@ -2,7 +2,6 @@
 대화 세션 평가 서비스 - LLM을 통한 자동 평가
 """
 import logging
-import os
 import json
 from typing import Dict, Any, Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +10,7 @@ import google.generativeai as genai
 from datetime import datetime
 
 from app.models.models import ConversationSession, SessionMessage, ConversationEvaluation, UserModel, UserRole
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -20,14 +20,14 @@ class EvaluationService:
     
     def __init__(self, db: AsyncSession):
         self.db = db
-        self.api_key = os.getenv("GOOGLE_API_KEY")
+        self.api_key = settings.GEMINI_API_KEY
         self.model_name = "gemini-2.5-flash"
         
         if self.api_key:
             genai.configure(api_key=self.api_key)
             self.model = genai.GenerativeModel(self.model_name)
         else:
-            logger.warning("GOOGLE_API_KEY가 설정되지 않았습니다")
+            logger.warning("GEMINI_API_KEY가 설정되지 않았습니다")
             self.model = None
     
     async def evaluate_session_without_db(

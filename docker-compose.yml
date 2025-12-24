@@ -35,7 +35,7 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8000/auth/google/callback}
-      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       ENVIRONMENT: development
       ENABLE_MAICE_TEST: true
     volumes:
@@ -47,7 +47,8 @@ services:
       - redis
     ports:
       - "8000:8000"
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --loop uvloop --reload
+    # 처음 실행 시 테이블이 없으면 실패하므로, 시작 전에 Alembic 마이그레이션을 자동 실행
+    command: sh -c "sh /app/docker-entrypoint.sh uvicorn main:app --host 0.0.0.0 --port 8000 --loop uvloop --reload"
 
   # 프론트엔드 서비스
   maice-front:
@@ -84,6 +85,7 @@ services:
       REDIS_URL: redis://redis:6379
       ENVIRONMENT: development
       MCP_API_KEY: ${MCP_API_KEY:-default-mcp-key}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
       - ./agent:/app
     networks:

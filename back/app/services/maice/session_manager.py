@@ -236,17 +236,11 @@ class SessionProcessor:
             # 통일된 스트리밍 처리 - 모드는 내부적으로 판단
             logger.info(f"🚀 세션 {self.session_id} 통일된 스트리밍 처리 시작")
             
-            # 모드에 따라 적절한 메서드 호출 (백엔드 내부 구현 차이만 존재)
-            if self.user_mode == "freepass":
-                async for message in self.agent_service.process_freepass_streaming(
-                    question, None, user_id, self.session_id
-                ):
-                    yield message
-            else:
-                async for message in self.agent_service.process_with_streaming_parallel(
-                    question, self.session_id, request_id, user_id, is_followup=False
-                ):
-                    yield message
+            # 런타임은 상시 에이전트 모드로만 동작 (DB의 assigned_mode는 변경하지 않음)
+            async for message in self.agent_service.process_with_streaming_parallel(
+                question, self.session_id, request_id, user_id, is_followup=False
+            ):
+                yield message
                 
         except Exception as e:
             logger.error(f"❌ 세션 {self.session_id} 새로운 질문 처리 실패: {e}")

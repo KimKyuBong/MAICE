@@ -47,7 +47,7 @@ docker build -f back/Dockerfile \
     --build-arg FORCE_NON_STREAMING="${FORCE_NON_STREAMING:-1}" \
     --build-arg AUTO_PROMOTE_AFTER_CLARIFICATION="${AUTO_PROMOTE_AFTER_CLARIFICATION:-0}" \
     --build-arg DATABASE_URL="${DATABASE_URL}" \
-    --build-arg GOOGLE_API_KEY="${GOOGLE_API_KEY:-}" \
+    --build-arg GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
     --build-arg REDIS_URL="${REDIS_URL:-redis://redis:6379}" \
     --build-arg DEBUG="${DEBUG:-True}" \
     --build-arg ENVIRONMENT="${ENVIRONMENT:-development}" \

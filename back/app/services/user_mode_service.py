@@ -7,8 +7,7 @@ import random
 import logging
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from sqlalchemy.orm import selectinload
+from sqlalchemy import select, func, and_
 from datetime import datetime
 
 from app.models.models import UserModel

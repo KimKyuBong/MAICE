@@ -818,7 +818,7 @@ class LLMTool(Tool):
                     self.logger.info(
                         f"🚀 Google Gemini 호출 시작: model={config.model}"
                     )
-                    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+                    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
                     model = genai.GenerativeModel(config.model)
                     self.logger.info(f"✅ Google Gemini 모델 생성 완료: {config.model}")
 

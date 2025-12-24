@@ -49,7 +49,7 @@ log_success "모든 필수 환경 변수 확인 완료"
 
 # 선택적 환경 변수 설정
 ANTHROPIC_KEY=${ANTHROPIC_API_KEY:-""}
-GOOGLE_KEY=${GOOGLE_API_KEY:-""}
+GEMINI_KEY=${GEMINI_API_KEY:-""}
 GOOGLE_REDIRECT=${GOOGLE_REDIRECT_URI:-"https://maice.kbworks.xyz/auth/google/callback"}
 MCP_URL=${MCP_SERVER_URL:-""}
 
@@ -218,7 +218,7 @@ CONTAINER_ID=$(docker run -d \
     -e REDIS_URL=redis://redis:6379 \
     -e OPENAI_API_KEY="${OPENAI_API_KEY}" \
     -e ANTHROPIC_API_KEY="${ANTHROPIC_KEY}" \
-    -e GOOGLE_API_KEY="${GOOGLE_KEY}" \
+    -e GEMINI_API_KEY="${GEMINI_KEY}" \
     -e ADMIN_USERNAME="${ADMIN_USERNAME}" \
     -e ADMIN_PASSWORD="${ADMIN_PASSWORD}" \
     -e SESSION_SECRET_KEY="${SESSION_SECRET_KEY}" \

@@ -267,7 +267,7 @@ async def main():
     elif llm_provider.lower() == "google":
         logger.info(f"   ├─ Google 모델: {google_model}")
         logger.info(
-            f"   └─ API 키: {'✅ 설정됨' if os.getenv('GOOGLE_API_KEY') else '❌ 미설정'}"
+            f"   └─ API 키: {'✅ 설정됨' if os.getenv('GEMINI_API_KEY') else '❌ 미설정'}"
         )
     elif llm_provider.lower() == "mcp":
         logger.info(f"   ├─ MCP 모델: {mcp_model}")

@@ -8,6 +8,8 @@ from datetime import datetime
 import secrets
 from sqlalchemy.sql import select
 import logging
+import sqlalchemy as sa
+from sqlalchemy import inspect
 
 load_dotenv()
 
@@ -40,6 +42,111 @@ engine = create_async_engine(
     }
 )
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+# ----------------------------
+# Auto schema sync (dev-friendly)
+# ----------------------------
+def _str_to_bool(v: str | None, default: bool = True) -> bool:
+    if v is None:
+        return default
+    return v.strip().lower() in ("1", "true", "yes", "y", "on")
+
+
+def _compile_server_default(sync_conn, server_default) -> str | None:
+    """Try to compile server_default to SQL string, return None on failure."""
+    if server_default is None:
+        return None
+    try:
+        arg = getattr(server_default, "arg", None)
+        if arg is None:
+            return None
+        # arg can be TextClause/ClauseElement
+        if hasattr(arg, "compile"):
+            return str(arg.compile(dialect=sync_conn.dialect))
+        return str(arg)
+    except Exception:
+        return None
+
+
+def _table_has_rows(sync_conn, table_name: str) -> bool:
+    prep = sync_conn.dialect.identifier_preparer
+    qt = prep.quote(table_name)
+    try:
+        # fast existence check
+        return sync_conn.execute(sa.text(f"SELECT 1 FROM {qt} LIMIT 1")).first() is not None
+    except Exception:
+        # if table not readable for any reason, assume it has data to stay safe
+        return True
+
+
+def _add_missing_columns_sync(sync_conn):
+    """
+    Add missing columns ONLY (no drops/renames/type changes).
+    This is intentionally conservative for safety.
+    """
+    insp = inspect(sync_conn)
+    existing_tables = set(insp.get_table_names())
+    prep = sync_conn.dialect.identifier_preparer
+
+    for table_name, table in Base.metadata.tables.items():
+        if table_name not in existing_tables:
+            continue
+
+        existing_cols = {c["name"] for c in insp.get_columns(table_name)}
+        has_rows = _table_has_rows(sync_conn, table_name)
+
+        for col in table.columns:
+            if col.name in existing_cols:
+                continue
+
+            qt = prep.quote(table_name)
+            qc = prep.quote(col.name)
+            coltype = col.type.compile(dialect=sync_conn.dialect)
+
+            default_sql = _compile_server_default(sync_conn, col.server_default)
+            default_clause = f" DEFAULT {default_sql}" if default_sql else ""
+
+            # Safe rule:
+            # - If table already has rows and column is NOT NULL without default, add as NULLABLE to avoid failure.
+            # - Otherwise, follow model's nullability.
+            if (not col.nullable) and has_rows and not default_sql and not col.primary_key:
+                nullable_clause = ""
+                logger.warning(
+                    f"[AUTO_SCHEMA_SYNC] {table_name}.{col.name} is NOT NULL but table has rows and no default; "
+                    f"adding as NULLABLE to avoid migration failure. Consider explicit migration for strict constraints."
+                )
+            else:
+                nullable_clause = "" if col.nullable or col.primary_key else " NOT NULL"
+
+            sql = f"ALTER TABLE {qt} ADD COLUMN {qc} {coltype}{default_clause}{nullable_clause}"
+            logger.info(f"[AUTO_SCHEMA_SYNC] {sql}")
+            sync_conn.execute(sa.text(sql))
+
+
+async def ensure_schema():
+    """
+    Ensure required schema exists at runtime:
+    - Create missing tables (Base.metadata.create_all(checkfirst=True))
+    - Add missing columns (conservative, add-only)
+
+    Controlled by env AUTO_SCHEMA_SYNC (default: true).
+    """
+    if not _str_to_bool(os.getenv("AUTO_SCHEMA_SYNC"), default=True):
+        logger.info("[AUTO_SCHEMA_SYNC] AUTO_SCHEMA_SYNC=false -> skip schema sync")
+        return
+
+    try:
+        logger.info("[AUTO_SCHEMA_SYNC] start: create missing tables + add missing columns")
+        async with engine.begin() as conn:
+            # 1) create missing tables
+            await conn.run_sync(lambda sync_conn: Base.metadata.create_all(sync_conn, checkfirst=True))
+            # 2) add missing columns
+            await conn.run_sync(_add_missing_columns_sync)
+        logger.info("[AUTO_SCHEMA_SYNC] done")
+    except Exception as e:
+        logger.error(f"[AUTO_SCHEMA_SYNC] failed: {e}")
+        # Don't block startup hard in dev; but you can force strictness later if needed.
+
 
 # DB 세션 의존성
 async def get_db() -> AsyncSession:
@@ -82,9 +189,9 @@ class TestDBSession:
 async def init_db():
     """데이터베이스 초기 데이터를 설정합니다. (테이블 생성은 Alembic으로 관리)"""
     try:
-        # 테이블 생성은 Alembic으로 관리하므로 제거
-        # async with engine.begin() as conn:
-        #     await conn.run_sync(Base.metadata.create_all)
+        # 개발 편의: docker compose up 시점에 누락 테이블/컬럼이 있으면 자동으로 보정
+        # (기존 데이터 변경 없이 add-only)
+        await ensure_schema()
             
         # 관리자 계정 생성 (환경변수로 명시적으로 설정된 경우에만)
         async with async_session() as session:

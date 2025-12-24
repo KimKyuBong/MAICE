@@ -31,7 +31,8 @@ class Settings:
     GOOGLE_REDIRECT_URI: str = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:5173/auth/callback")
     
     # Gemini Vision API 설정
-    GEMINI_API_KEY: Optional[str] = os.getenv("GOOGLE_API_KEY")  # GOOGLE_API_KEY 사용
+    # Gemini Vision API 키 (단일 환경변수로 통일)
+    GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY")
     GEMINI_VISION_MODEL: str = os.getenv("GEMINI_VISION_MODEL", "gemini-2.5-flash")
     
     # 애플리케이션 설정

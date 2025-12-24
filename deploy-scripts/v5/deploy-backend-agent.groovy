@@ -120,13 +120,13 @@ def deployBackendAgent(script) {
                 
                 # 선택적 환경 변수들을 환경에서 가져오기 (이미 검증됨)
                 ANTHROPIC_KEY=\${ANTHROPIC_API_KEY:-""}
-                GOOGLE_KEY=\${GOOGLE_API_KEY:-""}
+                GEMINI_KEY=\${GEMINI_API_KEY:-""}
                 GOOGLE_REDIRECT=\${GOOGLE_REDIRECT_URI:-"https://maice.kbworks.xyz/auth/google/callback"}
                 MCP_URL=\${MCP_SERVER_URL:-""}
                 
                 echo "선택적 환경 변수 상태:"
                 echo "ANTHROPIC_API_KEY 길이: \${#ANTHROPIC_KEY} (선택사항)"
-                echo "GOOGLE_API_KEY 길이: \${#GOOGLE_KEY} (선택사항)"
+                echo "GEMINI_API_KEY 길이: \${#GEMINI_KEY} (선택사항)"
                 echo "GOOGLE_REDIRECT_URI: \${GOOGLE_REDIRECT}"
                 echo "MCP_SERVER_URL: \${MCP_URL:-'(설정되지 않음)'}"
                 
@@ -139,7 +139,7 @@ def deployBackendAgent(script) {
                     -e REDIS_URL=redis://redis:6379 \\
                     -e OPENAI_API_KEY="\${OPENAI_API_KEY}" \\
                     -e ANTHROPIC_API_KEY="\${ANTHROPIC_KEY}" \\
-                    -e GOOGLE_API_KEY="\${GOOGLE_KEY}" \\
+                    -e GEMINI_API_KEY="\${GEMINI_KEY}" \\
                     -e ADMIN_USERNAME="\${ADMIN_USERNAME}" \\
                     -e ADMIN_PASSWORD="\${ADMIN_PASSWORD}" \\
                     -e SESSION_SECRET_KEY="\${SESSION_SECRET_KEY}" \\
@@ -173,12 +173,12 @@ def deployBackendAgent(script) {
                 
                 # 선택적 환경 변수들을 환경에서 가져오기 (이미 검증됨)
                 ANTHROPIC_KEY=\${ANTHROPIC_API_KEY:-""}
-                GOOGLE_KEY=\${GOOGLE_API_KEY:-""}
+                GEMINI_KEY=\${GEMINI_API_KEY:-""}
                 MCP_URL=\${MCP_SERVER_URL:-""}
                 
                 echo "선택적 환경 변수 상태:"
                 echo "ANTHROPIC_API_KEY 길이: \${#ANTHROPIC_KEY} (선택사항)"
-                echo "GOOGLE_API_KEY 길이: \${#GOOGLE_KEY} (선택사항)"
+                echo "GEMINI_API_KEY 길이: \${#GEMINI_KEY} (선택사항)"
                 echo "MCP_SERVER_URL: \${MCP_URL:-'(설정되지 않음)'}"
                 
                 echo "에이전트 데이터베이스 연결 정보 확인:"
@@ -189,7 +189,7 @@ def deployBackendAgent(script) {
                     -e REDIS_URL=redis://redis:6379 \\
                     -e OPENAI_API_KEY="\${OPENAI_API_KEY}" \\
                     -e ANTHROPIC_API_KEY="\${ANTHROPIC_KEY}" \\
-                    -e GOOGLE_API_KEY="\${GOOGLE_KEY}" \\
+                    -e GEMINI_API_KEY="\${GEMINI_KEY}" \\
                     -e MCP_SERVER_URL="\${MCP_URL}" \\
                     -e LLM_PROVIDER=mcp \\
                     -e OPENAI_CHAT_MODEL=gpt-5-mini \\
@@ -264,7 +264,7 @@ def rollbackBackendAgent(script) {
     script.withCredentials([
         script.string(credentialsId: 'OPENAI_API_KEY', variable: 'OPENAI_API_KEY'),
         script.string(credentialsId: 'ANTHROPIC_API_KEY', variable: 'ANTHROPIC_API_KEY'),
-        script.string(credentialsId: 'GOOGLE_API_KEY', variable: 'GOOGLE_API_KEY'),
+        script.string(credentialsId: 'GEMINI_API_KEY', variable: 'GEMINI_API_KEY'),
         script.string(credentialsId: 'ADMIN_USERNAME', variable: 'ADMIN_USERNAME'),
         script.string(credentialsId: 'ADMIN_PASSWORD', variable: 'ADMIN_PASSWORD'),
         script.string(credentialsId: 'SESSION_SECRET_KEY', variable: 'SESSION_SECRET_KEY'),
@@ -280,7 +280,7 @@ def rollbackBackendAgent(script) {
                 -e REDIS_URL=redis://redis:6379 \\
                 -e OPENAI_API_KEY="\${OPENAI_API_KEY}" \\
                 -e ANTHROPIC_API_KEY="\${ANTHROPIC_API_KEY}" \\
-                -e GOOGLE_API_KEY="\${GOOGLE_API_KEY}" \\
+                -e GEMINI_API_KEY="\${GEMINI_API_KEY}" \\
                 -e ADMIN_USERNAME="\${ADMIN_USERNAME}" \\
                 -e ADMIN_PASSWORD="\${ADMIN_PASSWORD}" \\
                 -e SESSION_SECRET_KEY="\${SESSION_SECRET_KEY}" \\
@@ -307,7 +307,7 @@ def rollbackBackendAgent(script) {
     script.withCredentials([
         script.string(credentialsId: 'OPENAI_API_KEY', variable: 'OPENAI_API_KEY'),
         script.string(credentialsId: 'ANTHROPIC_API_KEY', variable: 'ANTHROPIC_API_KEY'),
-        script.string(credentialsId: 'GOOGLE_API_KEY', variable: 'GOOGLE_API_KEY'),
+        script.string(credentialsId: 'GEMINI_API_KEY', variable: 'GEMINI_API_KEY'),
         script.string(credentialsId: 'MCP_SERVER_URL', variable: 'MCP_SERVER_URL')
     ]) {
         script.sh """
@@ -317,7 +317,7 @@ def rollbackBackendAgent(script) {
                 -e REDIS_URL=redis://redis:6379 \\
                 -e OPENAI_API_KEY="\${OPENAI_API_KEY}" \\
                 -e ANTHROPIC_API_KEY="\${ANTHROPIC_API_KEY}" \\
-                -e GOOGLE_API_KEY="\${GOOGLE_API_KEY}" \\
+                -e GEMINI_API_KEY="\${GEMINI_API_KEY}" \\
                 -e MCP_SERVER_URL="\${MCP_SERVER_URL}" \\
                 -e LLM_PROVIDER=mcp \\
                 -e OPENAI_CHAT_MODEL=gpt-5-mini \\

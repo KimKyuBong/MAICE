@@ -433,7 +433,7 @@ pipeline {
                                 string(credentialsId: 'DB_HOST', variable: 'DB_HOST'),
                                 string(credentialsId: 'REGISTRY_HOST', variable: 'REGISTRY_HOST'),
                                 string(credentialsId: 'REGISTRY_PORT', variable: 'REGISTRY_PORT'),
-                                string(credentialsId: 'GOOGLE_API_KEY', variable: 'GOOGLE_API_KEY')
+                                string(credentialsId: 'GEMINI_API_KEY', variable: 'GEMINI_API_KEY')
                             ]) {
                                 // 빌드 실행
                                 sh """
@@ -446,7 +446,7 @@ pipeline {
                                     export FORCE_NON_STREAMING="${FORCE_NON_STREAMING}"
                                     export AUTO_PROMOTE_AFTER_CLARIFICATION="${AUTO_PROMOTE_AFTER_CLARIFICATION}"
                                     export DATABASE_URL="postgresql://postgres:postgres@${DB_HOST}:5432/maice_web"
-                                    export GOOGLE_API_KEY="${GOOGLE_API_KEY}"
+                                    export GEMINI_API_KEY="${GEMINI_API_KEY}"
                                     export REDIS_URL="${REDIS_URL}"
                                     export DEBUG="True"
                                     export ENVIRONMENT="${DEPLOY_ENV}"
@@ -849,13 +849,13 @@ pipeline {
                         }
 
                         try {
-                            withCredentials([string(credentialsId: 'GOOGLE_API_KEY', variable: 'GOOGLE_API_KEY')]) {
-                                env.GOOGLE_API_KEY = GOOGLE_API_KEY
-                                echo "✅ GOOGLE_API_KEY 발견됨"
+                            withCredentials([string(credentialsId: 'GEMINI_API_KEY', variable: 'GEMINI_API_KEY')]) {
+                                env.GEMINI_API_KEY = GEMINI_API_KEY
+                                echo "✅ GEMINI_API_KEY 발견됨"
                             }
                         } catch (Exception e) {
-                            echo "⚠️ GOOGLE_API_KEY가 설정되지 않음 (선택사항)"
-                            env.GOOGLE_API_KEY = ""
+                            echo "⚠️ GEMINI_API_KEY가 설정되지 않음 (선택사항)"
+                            env.GEMINI_API_KEY = ""
                         }
 
                         try {
@@ -1035,7 +1035,7 @@ pipeline {
                                             export BUILD_NUMBER="${env.BUILD_NUMBER}"
                                             export OPENAI_API_KEY="${env.OPENAI_API_KEY}"
                                             export ANTHROPIC_API_KEY="${env.ANTHROPIC_API_KEY}"
-                                            export GOOGLE_API_KEY="${env.GOOGLE_API_KEY}"
+                                            export GEMINI_API_KEY="${env.GEMINI_API_KEY}"
                                             export GOOGLE_CLIENT_ID="${env.GOOGLE_CLIENT_ID}"
                                             export GOOGLE_CLIENT_SECRET="${env.GOOGLE_CLIENT_SECRET}"
                                             export GOOGLE_REDIRECT_URI="${env.GOOGLE_REDIRECT_URI}"
@@ -1088,7 +1088,7 @@ pipeline {
                                     export LLM_PROVIDER="${env.LLM_PROVIDER}"
                                     export OPENAI_API_KEY="${env.OPENAI_API_KEY}"
                                     export ANTHROPIC_API_KEY="${env.ANTHROPIC_API_KEY}"
-                                    export GOOGLE_KEY="${env.GOOGLE_API_KEY}"
+                                    export GEMINI_KEY="${env.GEMINI_API_KEY}"
                                     export MCP_URL="${env.MCP_SERVER_URL}"
                                     export MCP_OPENAI_BASE_URL="${env.MCP_OPENAI_BASE_URL}"
                                     export MCP_API_KEY="${env.MCP_API_KEY}"

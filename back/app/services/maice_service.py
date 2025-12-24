@@ -40,23 +40,15 @@ class MaiceService:
             
             # 사용자 모드 할당
             user_mode_service = await get_user_mode_service(self.db_session)
-            user_mode = await user_mode_service.get_or_assign_mode(user_id)
-            use_agents = (user_mode == 'agent')
+            user_mode = await user_mode_service.get_or_assign_mode(user_id)  # 배정/저장은 유지
             
-            logger.info(f"🎯 사용자 모드 할당: {user_mode}, use_agents={use_agents}")
+            # 런타임은 상시 에이전트 모드로만 동작 (DB의 assigned_mode는 변경하지 않음)
+            logger.info(f"🎯 사용자 assigned_mode(참고용): {user_mode} -> 런타임은 agent로 고정")
             
-            if not use_agents:
-                # 프리패스 모드
-                async for message in self._process_freepass_streaming(
-                    question, user_id, session_id, message_type, conversation_history
-                ):
-                    yield message
-            else:
-                # 에이전트 모드
-                async for message in self._process_agent_streaming(
-                    question, user_id, session_id, message_type, conversation_history
-                ):
-                    yield message
+            async for message in self._process_agent_streaming(
+                question, user_id, session_id, message_type, conversation_history
+            ):
+                yield message
                     
         except Exception as e:
             logger.error(f"❌ MAICE 채팅 처리 오류: {str(e)}")
